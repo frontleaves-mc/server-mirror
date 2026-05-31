@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+# 强制 UTF-8 locale，防止中文文件名导致 Java InvalidPathException
+export LANG="zh_CN.UTF-8"
+export LC_ALL="zh_CN.UTF-8"
+
 # 设置文件权限掩码，确保组内可写
 umask 002
 

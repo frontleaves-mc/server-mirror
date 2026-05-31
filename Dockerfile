@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     fontconfig \
     binutils \
+    locales \
+    && sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen zh_CN.UTF-8 \
     && curl -s https://repos.azul.com/azul-repo.key \
         | gpg --dearmor -o /usr/share/keyrings/azul.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/azul.gpg] https://repos.azul.com/zulu/deb stable main" \
@@ -19,6 +22,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /app /data /app/nativelibs /data/.sable/natives /data/.pg-native \
     && ldconfig
+
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
+ENV TZ=Asia/Shanghai
 
 COPY server-core.jar /app/server-core.jar
 COPY entrypoint.sh /app/entrypoint.sh
