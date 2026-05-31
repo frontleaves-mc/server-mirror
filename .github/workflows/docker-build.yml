@@ -45,6 +45,7 @@ jobs:
         with:
           fetch-depth: ${{ github.event_name == 'workflow_dispatch' && 0 || 1 }}
           ref: ${{ github.event.inputs.tag || github.ref }}
+          lfs: true
 
       - name: Resolve tag
         run: |
@@ -59,9 +60,6 @@ jobs:
           fi
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "Building tag: $TAG"
-
-      - name: Set up Git LFS
-        run: git lfs pull
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
