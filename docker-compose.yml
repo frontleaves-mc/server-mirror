@@ -14,7 +14,6 @@ services:
     ports:
       - "8080:8080"   # Web 界面
       - "5657:5657"   # SFTP
-      - "25565:25565" # Minecraft（如果直接在 PufferPanel 中托管）
     volumes:
       - pufferpanel-config:/etc/pufferpanel
       - pufferpanel-data:/var/lib/pufferpanel

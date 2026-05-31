@@ -4,8 +4,10 @@ set -e
 # 设置文件权限掩码，确保组内可写
 umask 002
 
-# 确保数据目录存在
+# 确保数据目录存在，并预创建 mod 原生库提取目录（Sable/Rapier/PowerGrid 等）
 mkdir -p /data
+mkdir -p /data/.sable/natives
+mkdir -p /data/.pg-native
 
 # 读取环境变量并设置默认值
 MEMORY="${MEMORY:-8G}"

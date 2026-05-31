@@ -73,8 +73,8 @@ docker buildx build --platform linux/amd64 -t youer-server .
 
 此镜像专为 **`linux/amd64`** 构建。
 
-- 基础镜像为 `azul/zulu-openjdk:21-jre`（Ubuntu 22.04），自带 GLIBC 2.35+。
-- 通过此 GLIBC 版本和标准 C 库环境确保本地库兼容性。
+- 基础镜像为 `ubuntu:24.04`，通过 Azul 官方 APT 源安装 `zulu21-jre-headless`。
+- Ubuntu 24.04 (Noble) 自带 GLIBC 2.39，满足 PowerGrid (`GLIBC_2.38`)、Rapier (`GLIBC_2.27`) 等所有 JNI 原生库的版本要求。
 - **不支持 ARM64 及其他架构。**
 
 ---
@@ -127,9 +127,9 @@ docker compose -f docker-compose.standalone.yml up -d
 
 ## Create: Aeronautics 兼容性
 
-[Create: Aeronautics](https://modrinth.com/mod/create-aeronautics) 模组使用 Rapier 3D 物理引擎，该引擎通过 JNI 访问，需要 **GLIBC 2.27 或更高版本**。
+[Create: Aeronautics](https://modrinth.com/mod/create-aeronautics) 模组使用 Rapier 3D 物理引擎，该引擎通过 JNI 访问，需要 **GLIBC 2.27 或更高版本**。[PowerGrid](https://modrinth.com/mod/powergrid) 模组的原生库需要 **GLIBC 2.38**。
 
-此镜像使用 `azul/zulu-openjdk:21-jre`（Ubuntu 22.04，GLIBC 2.35+），满足该要求。为确保 Rapier 本地库能够正确加载，镜像已额外安装 `fontconfig`、`binutils`、`ca-certificates` 等运行时依赖，并在构建阶段执行 `ldconfig` 以注册系统库路径。启动脚本同时配置了 `LD_LIBRARY_PATH` 与 `-Djava.library.path`，覆盖 `/tmp`、`/app/nativelibs` 及默认路径。
+此镜像基于 Ubuntu 24.04 (GLIBC 2.39)，满足上述所有要求。镜像已额外安装 `fontconfig`、`binutils` 等运行时依赖，并在构建阶段执行 `ldconfig` 以注册系统库路径。启动脚本同时配置了 `LD_LIBRARY_PATH` 与 `-Djava.library.path`，覆盖 `/tmp`、`/app/nativelibs` 及默认路径。
 
 Docker Compose 配置已固定 `platform: linux/amd64` 并放宽 `seccomp` 限制，避免 ARM 主机架构不匹配或 Docker 默认 seccomp 过滤器阻止 Rust FFI 系统调用。
 
@@ -142,10 +142,10 @@ Docker Compose 配置已固定 `platform: linux/amd64` 并放宽 `seccomp` 限�
 | **Create Aeronautics** | `1.1.3` | 与上述版本配对测试通过 |
 | **Java** | `21` | Java 24/25 会导致崩溃，必须使用 Java 21 |
 
-如果你正在构建自定义基础镜像或在 GLIBC 版本较旧的主机上运行，请将 C 库升级至至少 2.27，以维持与基于 Rapier 的模组的兼容性。
+如果你正在构建自定义基础镜像或在 GLIBC 版本较旧的主机上运行，请将 C 库升级至至少 2.38，以维持与 PowerGrid 等模组的兼容性。
 
 ---
 
 ## 非 Root 用户
 
-服务器以 `minecraft` 用户（UID 1000）运行。容器内的所有进程均在此非特权账户下运行，以提高安全性。
+此镜像以 **root** 用户运行。如需以非 root 用户运行，请自行在 Dockerfile 或 docker-compose 中配置 `user` 指令。
