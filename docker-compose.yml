@@ -1,0 +1,82 @@
+# PufferPanel + Youer Minecraft 服务器的 Docker Compose 配置
+# PufferPanel 作为 Web 管理界面，可以生成同级容器
+# Youer-server 是实际的 Minecraft 服务器实例
+
+services:
+  # ------------------------------------------------------------------
+  # PufferPanel — Web 管理面板 + SFTP 访问
+  # 使用 SQLite（无需外部数据库）。挂载 docker.sock 以便它可以
+  # 为每个 Minecraft 服务器启动同级容器。
+  # ------------------------------------------------------------------
+  pufferpanel:
+    image: pufferpanel/pufferpanel:latest
+    container_name: pufferpanel
+    ports:
+      - "8080:8080"   # Web 界面
+      - "5657:5657"   # SFTP
+      - "25565:25565" # Minecraft（如果直接在 PufferPanel 中托管）
+    volumes:
+      - pufferpanel-config:/etc/pufferpanel
+      - pufferpanel-data:/var/lib/pufferpanel
+      - /var/run/docker.sock:/var/run/docker.sock  # 用于同级容器管理
+    environment:
+      # SQLite 方言 — 无需外部数据库服务
+      PUFFER_PANEL_DATABASE_DIALECT: sqlite3
+      # SQLite 数据库文件位置（共享缓存模式以支持并发访问）
+      PUFFER_PANEL_DATABASE_URL: "file:/var/lib/pufferpanel/database.db?cache=shared"
+      # 日志输出目录
+      PUFFER_LOGS: /var/log/pufferpanel
+      # 守护进程数据的根目录
+      PUFFER_DAEMON_DATA_ROOT: /var/lib/pufferpanel
+      # 生成的服务器容器的 Docker 根目录
+      PUFFER_DOCKER_ROOT: /var/lib/pufferpanel/servers
+    restart: unless-stopped
+    networks:
+      - minecraft-net
+
+  # ------------------------------------------------------------------
+  # Youer Minecraft 服务器 — 从本地 Dockerfile 构建的自定义镜像
+  # 可通过外部管理或 PufferPanel 的同级容器生成进行管理。
+  # ------------------------------------------------------------------
+  youer-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youer-server
+    platform: linux/amd64   # 强制 x86_64 架构，避免 ARM 主机拉取错误架构镜像导致 JNI 本地库无法加载
+    ports:
+      - "25565:25565"   # Minecraft 服务器端口
+    volumes:
+      - server-data:/data   # 持久化的世界数据、配置、插件
+    environment:
+      # JVM 的最大内存分配
+      MEMORY: 8G
+      # Minecraft EULA 接受（必须设置为 true 才能启动）
+      EULA: "false"
+      # 额外的 JVM 参数（例如，-XX:+UseG1GC）
+      JVM_FLAGS: ""
+      # 传递给服务器 jar 的额外 Java 选项
+      JAVA_OPTS: ""
+    depends_on:
+      - pufferpanel
+    restart: unless-stopped
+    # 放宽 seccomp 限制，允许 Rapier 物理引擎等 Rust FFI 库进行必要的系统调用
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - minecraft-net
+
+# ------------------------------------------------------------------
+# 命名卷 — 在容器重建后保留数据
+# ------------------------------------------------------------------
+volumes:
+  pufferpanel-config:
+  pufferpanel-data:
+  server-data:
+
+# ------------------------------------------------------------------
+# 用于服务间通信的自定义桥接网络
+# ------------------------------------------------------------------
+networks:
+  minecraft-net:
+    driver: bridge

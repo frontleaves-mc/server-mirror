@@ -1,0 +1,36 @@
+# Youer Minecraft 服务器的独立 Docker Compose 配置
+# 这是不带 PufferPanel 管理面板的独立模式。
+# 如果你只想通过 Docker Compose 直接运行 Minecraft 服务器，
+# 而不需要 Web 管理面板的开销，请使用此文件。
+#
+# 如需完整的 PufferPanel 管理部署，请参见 docker-compose.yml。
+
+services:
+  youer-server:
+    build:
+      context: .
+    container_name: youer-server
+    platform: linux/amd64   # 强制 x86_64 架构，避免 ARM 主机拉取错误架构镜像导致 JNI 本地库无法加载
+    ports:
+      - "25565:25565"
+    volumes:
+      # 绑定挂载，方便在宿主机文件系统上访问世界数据
+      - ./data:/data
+    environment:
+      # JVM 最大堆内存（独立模式默认 8G，低于
+      # 完整 Compose 配置，因为没有 PufferPanel 的开销）
+      MEMORY: 8G
+      # 必须设置为 "true" 以接受 Minecraft EULA，服务器才能启动。
+      # 当 EULA=true 时，入口点将自动创建 /data/eula.txt。
+      EULA: "false"
+      # 可选的额外 JVM 参数（例如 -XX:+UseG1GC -XX:MaxGCPauseMillis=200）
+      JVM_FLAGS: ""
+      # 可选的额外 Java 选项（例如 -Dfile.encoding=UTF-8）
+      JAVA_OPTS: ""
+    restart: unless-stopped
+    # 放宽 seccomp 限制，允许 Rapier 物理引擎等 Rust FFI 库进行必要的系统调用
+    security_opt:
+      - seccomp:unconfined
+    # 启用交互式控制台访问（通过 `docker attach youer-server` 附加）
+    stdin_open: true
+    tty: true

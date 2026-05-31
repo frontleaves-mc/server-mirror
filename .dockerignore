@@ -1,0 +1,39 @@
+# Git 元数据
+.git/
+.gitignore
+
+# OMO 计划与证据目录
+.omo/
+
+# Markdown 文档（镜像内不需要）
+*.md
+
+# 本地数据目录，不应复制到构建上下文
+data/
+test-data/
+
+# 环境变量文件
+.env
+.env.*
+
+# macOS 元数据
+.DS_Store
+
+# Docker 自身构建产物
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# 备份/编辑器临时文件
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+
+# Node.js 依赖（如将来用于脚本）
+node_modules/
+
+# Python 缓存（如将来用于脚本）
+__pycache__/

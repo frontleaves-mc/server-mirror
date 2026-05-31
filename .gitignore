@@ -1,0 +1,36 @@
+# 数据目录（用户生成的世界、配置、日志）
+data/
+test-data/
+
+# 环境变量
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# 日志
+*.log
+logs/
+
+# 构建产物
+build/
+dist/
+
+# Node / Python（如将来用于脚本）
+node_modules/
+__pycache__/
+
+# 编辑器备份
+*.bak
+
+### AI ###
+.omo/
