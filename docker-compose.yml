@@ -35,13 +35,11 @@ services:
       - minecraft-net
 
   # ------------------------------------------------------------------
-  # Youer Minecraft 服务器 — 从本地 Dockerfile 构建的自定义镜像
+  # Youer Minecraft 服务器 — 从 Docker Hub 拉取预构建镜像
   # 可通过外部管理或 PufferPanel 的同级容器生成进行管理。
   # ------------------------------------------------------------------
   youer-server:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: xiaolfeng/mc-youer-server-mirror:latest
     container_name: youer-server
     platform: linux/amd64   # 强制 x86_64 架构，避免 ARM 主机拉取错误架构镜像导致 JNI 本地库无法加载
     ports:
