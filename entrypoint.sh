@@ -57,5 +57,6 @@ echo "[INFO] 正在启动服务器..."
 # 这样信号可以直接传递给 Java 进程
 exec java -Xmx"${MEMORY}" \
     -Djava.library.path="/tmp:/app/nativelibs:/usr/java/packages/lib" \
-    ${JVM_FLAGS} ${JAVA_OPTS} \
+    ${JVM_FLAGS} \
+    ${JAVA_OPTS} \
     -jar /app/server-core.jar nogui
