@@ -1,34 +1,17 @@
-# PufferPanel + Youer Minecraft 服务器的 Docker Compose 配置
-# PufferPanel 作为 Web 管理界面，可以生成同级容器
-# Youer-server 是实际的 Minecraft 服务器实例
+# Youer Minecraft 服务器 + 状态监控页面的 Docker Compose 配置
 
 services:
   # ------------------------------------------------------------------
-  # PufferPanel — Web 管理面板 + SFTP 访问
-  # 使用 SQLite（无需外部数据库）。挂载 docker.sock 以便它可以
-  # 为每个 Minecraft 服务器启动同级容器。
+  # mcstatus — 轻量级 Minecraft 服务器状态监控页面
+  # 使用 nginx + PHP 直连 MC Server List Ping 协议，无需外部 API
   # ------------------------------------------------------------------
-  pufferpanel:
-    image: pufferpanel/pufferpanel:latest
-    container_name: pufferpanel
+  mcstatus:
+    image: php:apache
+    container_name: mcstatus
     ports:
-      - "8080:8080"   # Web 界面
-      - "5657:5657"   # SFTP
+      - "8080:80"
     volumes:
-      - pufferpanel-config:/etc/pufferpanel
-      - pufferpanel-data:/var/lib/pufferpanel
-      - /var/run/docker.sock:/var/run/docker.sock  # 用于同级容器管理
-    environment:
-      # SQLite 方言 — 无需外部数据库服务
-      PUFFER_PANEL_DATABASE_DIALECT: sqlite3
-      # SQLite 数据库文件位置（共享缓存模式以支持并发访问）
-      PUFFER_PANEL_DATABASE_URL: "file:/var/lib/pufferpanel/database.db?cache=shared"
-      # 日志输出目录
-      PUFFER_LOGS: /var/log/pufferpanel
-      # 守护进程数据的根目录
-      PUFFER_DAEMON_DATA_ROOT: /var/lib/pufferpanel
-      # 生成的服务器容器的 Docker 根目录
-      PUFFER_DOCKER_ROOT: /var/lib/pufferpanel/servers
+      - ./mcstatus:/var/www/html:ro
     restart: unless-stopped
     networks:
       - minecraft-net
@@ -54,8 +37,6 @@ services:
       JVM_FLAGS: ""
       # 传递给服务器 jar 的额外 Java 选项
       JAVA_OPTS: ""
-    depends_on:
-      - pufferpanel
     restart: unless-stopped
     # 放宽 seccomp 限制，允许 Rapier 物理引擎等 Rust FFI 库进行必要的系统调用
     security_opt:
@@ -67,8 +48,6 @@ services:
 # 命名卷 — 在容器重建后保留数据
 # ------------------------------------------------------------------
 volumes:
-  pufferpanel-config:
-  pufferpanel-data:
   server-data:
 
 # ------------------------------------------------------------------
